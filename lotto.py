@@ -24,14 +24,12 @@ class MyApp(QWidget):
         self.initUI()
     
     def initUI(self):
-        self.port_name = QLineEdit("COM1")
-        self.port_name.setAlignment(Qt.AlignRight)
         
         self.b_rate = QLineEdit()
         self.b_rate.setAlignment(Qt.AlignRight)
         self.b_rate.setValidator(QIntValidator())
         
-        label1 = QLabel("Get Lucky Number!",self)
+        label1 = QLabel("Get Lucky Number!",self) 
         font1 = label1.font()
         font1.setPointSize(10)
         label1.setFont(font1)
@@ -56,8 +54,14 @@ class MyApp(QWidget):
         self.t_browser.setAcceptRichText(True)
         
         self.body = QVBoxLayout(self)
-        
         self.flo = QFormLayout(self)
+        
+        self.port_name = QComboBox(self)
+        self.port_name.addItem('COM1')
+        self.port_name.addItem('COM2')
+        self.port_name.addItem('COM3')
+        self.port_name.addItem('COM4')
+        
         self.flo.addRow("Port Name :", self.port_name)
         self.flo.addRow("Boud Rate :", self.b_rate)
         
@@ -80,7 +84,7 @@ class MyApp(QWidget):
         
     def conn_serial_data(self):
         try:
-            ser_port_name = self.port_name.text()
+            ser_port_name = self.port_name.currentText()
             ser_b_rate = int(self.b_rate.text())
         except:
             print("Null input")
@@ -101,7 +105,6 @@ class MyApp(QWidget):
             print("UART is not working")
             
     def get_lotto_number(self,label):
-        
         try:
             while self.num_check() and self.serial_flag :
                 print("change")
@@ -138,11 +141,7 @@ class MyApp(QWidget):
             self.idx = self.idx + 1
         workbook.save(file_path)
                 
-       
-        
-        
 
-    
         
 if __name__ == '__main__':
     app = QApplication(sys.argv)
