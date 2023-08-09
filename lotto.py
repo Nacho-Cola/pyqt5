@@ -1,6 +1,7 @@
 
 
 import sys
+import os
 from PyQt5.QtWidgets import *
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QIntValidator
@@ -8,6 +9,7 @@ import serial
 import openpyxl
 import threading
 from datetime import datetime
+import time
 
 
 class MyApp(QWidget):
@@ -16,6 +18,9 @@ class MyApp(QWidget):
         super().__init__()
         self.data_thread = threading.Thread(target=self.process_data)
         self.serial_flag = 0
+        self.prev_data = [46]
+        self.number_log = []
+        self.idx = 1
         self.initUI()
     
     def initUI(self):
@@ -25,13 +30,6 @@ class MyApp(QWidget):
         self.b_rate = QLineEdit()
         self.b_rate.setAlignment(Qt.AlignRight)
         self.b_rate.setValidator(QIntValidator())
-        
-        self.conn_uart_btn = QPushButton("Connect", self)
-        self.conn_uart_btn.clicked.connect(self.conn_serial_data)
-        self.dis_uart_btn = QPushButton("Disconnect", self)
-        self.dis_uart_btn.clicked.connect(self.dis_serial_data)
-        self.get_lotto_num_btn = QPushButton("Gotcha!", self)
-        self.get_lotto_num_btn.clicked.connect(self.get_lotto_number)
         
         label1 = QLabel("Get Lucky Number!",self)
         font1 = label1.font()
@@ -45,6 +43,18 @@ class MyApp(QWidget):
         label2.setFont(font1)
         
         
+        self.conn_uart_btn = QPushButton("Connect", self)
+        self.conn_uart_btn.clicked.connect(self.conn_serial_data)
+        self.dis_uart_btn = QPushButton("Disconnect", self)
+        self.dis_uart_btn.clicked.connect(self.dis_serial_data)
+        self.get_lotto_num_btn = QPushButton("Gotcha!", self)
+        self.get_lotto_num_btn.clicked.connect(lambda:self.get_lotto_number(label2))
+        self.save_btn = QPushButton("Save", self)
+        self.save_btn.clicked.connect(lambda:self.save('example'))
+        
+        self.t_browser = QTextBrowser(self)
+        self.t_browser.setAcceptRichText(True)
+        
         self.body = QVBoxLayout(self)
         
         self.flo = QFormLayout(self)
@@ -57,6 +67,9 @@ class MyApp(QWidget):
         self.body.addSpacing(50)
         self.body.addWidget(label1)
         self.body.addWidget(label2)
+        self.body.addWidget(self.t_browser)
+        self.body.addWidget(self.get_lotto_num_btn)
+        self.body.addWidget(self.save_btn)
         
         
         self.setLayout(self.flo)
@@ -75,6 +88,7 @@ class MyApp(QWidget):
             self.ser = serial.Serial(ser_port_name, ser_b_rate)
             print("UART Connected")
             self.serial_flag = 1
+            self.data_thread.start()
         except:
             print("Check your port number.")   
             
@@ -86,10 +100,45 @@ class MyApp(QWidget):
         except:
             print("UART is not working")
             
-    def get_lotto_number(self):
+    def get_lotto_number(self,label):
+        
+        try:
+            while self.num_check() and self.serial_flag :
+                print("change")
+            label.setText(str(self.uart_data))
+            self.prev_data  = self.uart_data
+            self.t_browser.append(str(self.prev_data))
+            self.number_log.append([datetime.now().strftime('%Y-%m-%d %H:%M:%S.%f')[:-3]] + self.prev_data)
+        except:
+            print("UART connect First")
         
     def process_data(self):
         while self.serial_flag:
+            self.uart_data = sorted(list(map(int, str(self.ser.readline())[2:-5].split(','))))
+            
+    
+    def num_check(self):
+        for i in self.prev_data:
+            if i in self.uart_data:
+                return 1
+        return 0
+    
+    def save(self, file_name):
+        default_dir ="/home/qt_user/Documents"
+        default_filename = os.path.join(default_dir, file_name)
+        finder, _ = QFileDialog.getSaveFileName(self,'Save Lotto numbers',default_filename,'Excel(*.xlsx)')
+        if finder:
+            self.save_as_excal(finder)
+        
+    def save_as_excal(self, file_path):
+        workbook = openpyxl.Workbook()
+        sheet = workbook.active
+        for row in self.number_log:
+            sheet.append([self.idx]+row)
+            self.idx = self.idx + 1
+        workbook.save(file_path)
+                
+       
         
         
 
