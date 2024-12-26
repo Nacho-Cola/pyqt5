@@ -1,4 +1,4 @@
-# Lotto Number Generator 프로젝트
+# [UART]Lotto Number Generator
 
 Lotto Number Generator 프로젝트는 UART(Universal Asynchronous Receiver/Transmitter) 통신을 활용하여 데이터를 수신하고, 이를 통해 로또 번호를 생성, 표시, 저장하는 데 목적이 있습니다. 이 프로젝트는 PyQt5를 기반으로 GUI를 제공하며, 직관적인 사용자 인터페이스를 통해 로또 번호를 처리할 수 있습니다.
 
